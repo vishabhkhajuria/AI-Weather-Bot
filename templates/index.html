@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AI Weather Bot</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+    <h1>AI Weather Bot</h1>
+    <form method="POST" action="/get_weather">
+        <label for="location">Enter your location:</label>
+        <input type="text" id="location" name="location" required>
+        <div id="suggestions"></div>
+        <button type="submit">Get Weather</button>
+    </form>
+
+    <script>
+        $(document).ready(function() {
+            $('#location').on('input', function() {
+                var query = $(this).val();
+
+                if (query.length > 2) {
+                    // Call the Flask route to get city suggestions (with fuzzy matching)
+                    $.get(`/suggest_cities?q=${query}`, function(data) {
+                        $('#suggestions').empty();  // Clear previous suggestions
+
+                        if (data.length > 0) {
+                            data.forEach(function(location) {
+                                var suggestion = `<p onclick="selectSuggestion('${location}')">${location}</p>`;
+                                $('#suggestions').append(suggestion);
+                            });
+                        } else {
+                            $('#suggestions').append('<p>No suggestions found</p>');
+                        }
+                    }).fail(function() {
+                        $('#suggestions').append('<p>Error fetching suggestions</p>');  // Handle failed requests
+                    });
+                } else {
+                    $('#suggestions').empty();  // Clear suggestions if query is too short
+                }
+            });
+        });
+
+        function selectSuggestion(city) {
+            $('#location').val(city);
+            $('#suggestions').empty();  // Clear suggestions after selection
+        }
+    </script>
+
+    <style>
+        #suggestions p {
+            cursor: pointer;
+            padding: 5px;
+            border: 1px solid #ddd;
+            margin: 0;
+        }
+
+        #suggestions p:hover {
+            background-color: #f0f0f0;
+        }
+    </style>
+</body>
+</html>
